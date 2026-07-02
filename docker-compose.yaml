@@ -1,0 +1,96 @@
+services:
+
+  # ==================== Базы данных ====================
+
+  postgres-users:
+    image: postgres:15
+    container_name: postgres-users
+    environment:
+      POSTGRES_DB: users_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+
+  postgres-templates:
+    image: postgres:15
+    container_name: postgres-templates
+    environment:
+      POSTGRES_DB: templates_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5433:5432"
+
+  postgres-dispatch:
+    image: postgres:15
+    container_name: postgres-dispatch
+    environment:
+      POSTGRES_DB: dispatch_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5434:5432"
+
+  postgres-delivery:
+    image: postgres:15
+    container_name: postgres-delivery
+    environment:
+      POSTGRES_DB: delivery_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5435:5432"
+
+  # ==================== Kafka + Zookeeper ====================
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  # ==================== Почтовые серверы ====================
+
+  maildev:
+    image: maildev/maildev
+    container_name: maildev
+    ports:
+      - "1080:80"
+      - "1025:1025"
+
+  postfix:
+    image: boky/postfix
+    container_name: postfix
+    environment:
+      SMTP_SERVER: smtp.example.com
+      SMTP_PORT: 587
+      SERVER_HOSTNAME: notification-service.local
+      ALLOW_EMPTY_SENDER_DOMAINS: "true"
+    ports:
+      - "2525:25"
+
+  # ==================== pgAdmin ====================
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"

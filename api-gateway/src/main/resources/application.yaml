@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: user-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/auth/**, /api/contacts/**
+        - id: template-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/templates/**
+        - id: dispatch-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/notifications/**
+
+jwt:
+  secret: my-256-bit-secret-key-for-development-only
+
+logging:
+  level:
+    com.notification: DEBUG

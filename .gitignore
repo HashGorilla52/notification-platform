@@ -1,0 +1,13 @@
+# Maven
+target/
+
+# IDEA
+.idea/
+*.iml
+
+# Docker
+docker-data/
+
+# OS
+.DS_Store
+Thumbs.db

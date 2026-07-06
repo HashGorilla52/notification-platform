@@ -1,5 +1,6 @@
-package com.notification.userservice.user;
+package com.notification.userservice.repository;
 
+import com.notification.userservice.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

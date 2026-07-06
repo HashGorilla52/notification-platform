@@ -1,4 +1,4 @@
-package com.notification.userservice.user;
+package com.notification.userservice.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

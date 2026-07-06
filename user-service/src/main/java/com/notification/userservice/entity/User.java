@@ -1,4 +1,4 @@
-package com.notification.userservice.user;
+package com.notification.userservice.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -74,4 +74,5 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return UserDetails.super.isEnabled();
     }
+
 }

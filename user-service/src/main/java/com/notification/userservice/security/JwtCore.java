@@ -13,6 +13,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Generates and validates JWT access and refresh tokens.
+ * Uses HMAC-SHA256 for signing.
+ */
 @Component
 public class JwtCore {
 

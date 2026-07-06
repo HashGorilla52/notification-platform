@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: users_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
 
@@ -18,7 +18,7 @@ services:
     environment:
       POSTGRES_DB: templates_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5433:5432"
 
@@ -28,7 +28,7 @@ services:
     environment:
       POSTGRES_DB: dispatch_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5434:5432"
 
@@ -38,7 +38,7 @@ services:
     environment:
       POSTGRES_DB: delivery_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5435:5432"
 
@@ -83,14 +83,3 @@ services:
       ALLOW_EMPTY_SENDER_DOMAINS: "true"
     ports:
       - "2525:25"
-
-  # ==================== pgAdmin ====================
-
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "5050:80"

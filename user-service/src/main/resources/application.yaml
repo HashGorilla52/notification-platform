@@ -7,7 +7,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/users_db
     username: postgres
-    password: secret
+    password: ${POSTGRES_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -19,8 +19,10 @@ spring:
     enabled: true
 
 jwt:
-  secret: my-256-bit-secret-key-for-development-only
-  expiration: 86400000
+  secret: ${JWT_SECRET:default-dev-secret}
+  access-token-expiration: 900000
+  refresh-token-expiration: 604800000
+  issuer: "http://localhost:8081"
 
 logging:
   level:

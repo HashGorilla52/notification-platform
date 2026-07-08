@@ -24,6 +24,8 @@ public class JwtCore {
     private final long accessTokenExpiration;
     private final long refreshTokenExpiration;
     private final String issuer;
+    public static final String ACCESS = "access";
+    public static final String REFRESH = "refresh";
 
     public JwtCore(
             @Value("${jwt.secret}")  String secret, @Value("${jwt.access-token-expiration}") long accessExpiration,
@@ -40,14 +42,14 @@ public class JwtCore {
     public String generateAccessToken(UUID userId, String email) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
-        claims.put("type", "access");
+        claims.put("type", ACCESS);
         return buildToken(email, claims, accessTokenExpiration);
     }
 
     public String generateRefreshToken(UUID userId, String email, long version) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
-        claims.put("type", "refresh");
+        claims.put("type", REFRESH);
         claims.put("version", version);
         return buildToken(email, claims, refreshTokenExpiration);
     }
@@ -62,6 +64,10 @@ public class JwtCore {
 
     public Long getVersionFromToken(String token) {
         return parseToken(token).getPayload().get("version", Long.class);
+    }
+
+    public String getTypeFromToken(String token) {
+        return parseToken(token).getPayload().get("type", String.class);
     }
 
     public boolean isValid(String token) {

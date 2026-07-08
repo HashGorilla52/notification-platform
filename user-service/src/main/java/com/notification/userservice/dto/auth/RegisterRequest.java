@@ -1,4 +1,14 @@
-package com.notification.userservice.dto;
+package com.notification.userservice.dto.auth;
 
-public record RegisterRequest() {
-}
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public record RegisterRequest(@NotBlank
+                              @Email
+                              String email,
+                              @NotBlank
+                              @Size(min = 8, max = 32)
+                              String password,
+                              @NotBlank
+                              String fullName) {}

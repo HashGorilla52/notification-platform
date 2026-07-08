@@ -31,4 +31,9 @@ public class UserServiceGlobalExceptionHandler {
         pd.setProperty("errors", errors);
         return pd;
     }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ProblemDetail handleNotFound(UserNotFoundException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+    }
 }

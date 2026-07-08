@@ -1,8 +1,6 @@
 package com.notification.userservice.service.auth;
 
-import com.notification.userservice.dto.auth.AuthResponse;
-import com.notification.userservice.dto.auth.LoginRequest;
-import com.notification.userservice.dto.auth.RegisterRequest;
+import com.notification.userservice.dto.auth.*;
 import com.notification.userservice.entity.User;
 import com.notification.userservice.exception.ResourceAlreadyExistsException;
 import com.notification.userservice.exception.UserNotFoundException;
@@ -44,12 +42,12 @@ public class AuthService {
         return new AuthResponse(accessToken, refreshToken, email, fullName);
     }
 
-    public AuthResponse login(LoginRequest loginRequest) {
-        String requestEmail = loginRequest.email();
+    public AuthResponse login(LoginRequest request) {
+        String requestEmail = request.email();
         User user = userRepository.findByEmail(requestEmail).orElseThrow(
                 () -> new UserNotFoundException("User with email " + requestEmail + " not found"));;
 
-        if (!passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new BadCredentialsException("Incorrect password");
         }
 
@@ -91,28 +89,29 @@ public class AuthService {
         return new AuthResponse(newAccessToken, newRefreshToken, email, user.getFullName());
     }
 
-    public void changePassword(String email, String oldPassword, String newPassword) {
+    public AuthResponse changePassword(String email, ChangePasswordRequest request) {
         User user = userRepository.findByEmail(email).orElseThrow(
                 () -> new UserNotFoundException("User with email " + email + " not found")
         );
 
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+        if (!passwordEncoder.matches(request.oldPassword(), user.getPassword())) {
             throw new BadCredentialsException("Incorrect old password");
         }
 
         long trueVersion = user.getVersion();
         long newVersion = trueVersion == Long.MAX_VALUE ? 0L : trueVersion + 1; // :)
-        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
         user.setVersion(newVersion);
         userRepository.save(user);
+        String accessToken = jwtCore.generateAccessToken(user.getId(), email);
+        String refreshToken = jwtCore.generateRefreshToken(user.getId(), email, newVersion);
+        return new AuthResponse(accessToken, refreshToken, email, user.getFullName());
     }
 
-    public void updateFullName(String email, String newFullName) {
+    public void updateFullName(String email, UpdateFullNameRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        user.setFullName(newFullName);
+        user.setFullName(request.fullName());
         userRepository.save(user);
     }
-
-    
 }

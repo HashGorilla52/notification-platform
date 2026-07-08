@@ -1,4 +1,4 @@
-package com.notification.userservice.controller.auth;
+package com.notification.userservice.service.auth;
 
 import com.notification.userservice.dto.auth.AuthResponse;
 import com.notification.userservice.dto.auth.LoginRequest;

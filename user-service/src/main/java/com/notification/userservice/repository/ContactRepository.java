@@ -6,11 +6,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface ContactRepository extends JpaRepository<Contact, UUID> {
-    public List<Contact> findByUserId(UUID ownerId);
+    public List<Contact> findByUser(User user);
 
-    public List<Contact> findByUser(User owner);
+    public boolean existsByEmailAndOwnerId(String email, UUID ownerId);
+
+    public Optional<Contact> findByEmailAndOwnerId(String email, UUID ownerId);
+
+    public Optional<Contact> findByIdAndOwnerId(UUID id, UUID ownerId);
 }

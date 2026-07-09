@@ -16,3 +16,5 @@ CREATE TABLE contacts (
                           telegram_id VARCHAR(100),
                           created_at  TIMESTAMP DEFAULT NOW()
 );
+
+CREATE UNIQUE INDEX idx_contacts_owner_email ON contacts(owner_id, email);

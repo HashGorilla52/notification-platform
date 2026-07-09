@@ -23,7 +23,6 @@ public class Contact {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false, updatable = false)
-    @Setter(AccessLevel.NONE)
     private User user;
 
     @Column(name = "name",  nullable = false)

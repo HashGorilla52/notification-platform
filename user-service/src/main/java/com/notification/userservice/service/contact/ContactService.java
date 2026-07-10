@@ -57,7 +57,7 @@ public class ContactService {
             CSVParser parser = csvFormat.parse(reader);
             Set<String> requiredHeaders = Set.of("name" , "email");
             Set<String> actualHeaders = parser.getHeaderMap().keySet();
-            if  (!requiredHeaders.containsAll(actualHeaders)) {
+            if  (!actualHeaders.containsAll(requiredHeaders)) {
                 throw new IllegalArgumentException("Missing required header " + requiredHeaders);
             }
 
@@ -94,6 +94,7 @@ public class ContactService {
                     contact.setEmail(email);
                     contact.setPhone(phone);
                     contact.setTelegramId(telegramId);
+                    contact.setUser(user);
                     contacts.add(contact);
                 }
                 else {

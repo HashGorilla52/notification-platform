@@ -33,6 +33,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         if (!token.isEmpty()) {
             if(jwtCore.isValid(token)) {
+                String type = jwtCore.getTypeFromToken(token);
+                if (!"/auth/refresh".equals(request.getServletPath()) && !"access".equals(type)) {
+                    response.sendError(401, "Access token required");
+                    return;
+                }
                 String email = jwtCore.getEmailFromToken(token);
                 UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(email);
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

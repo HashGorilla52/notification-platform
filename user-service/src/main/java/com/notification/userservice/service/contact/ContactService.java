@@ -3,10 +3,7 @@ package com.notification.userservice.service.contact;
 import com.notification.userservice.dto.contact.*;
 import com.notification.userservice.entity.Contact;
 import com.notification.userservice.entity.User;
-import com.notification.userservice.exception.CsvProcessingException;
-import com.notification.userservice.exception.CsvValidationException;
-import com.notification.userservice.exception.ResourceAlreadyExistsException;
-import com.notification.userservice.exception.ResourceNotFoundException;
+import com.notification.userservice.exception.*;
 import com.notification.userservice.repository.ContactRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
@@ -14,6 +11,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -145,6 +143,11 @@ public class ContactService {
     }
 
     public ContactResponse getContactByEmail(String email, User user) {
+        if (email == null || email.isBlank()) {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("email", "Email is required");
+            throw new ValidationException(errors);
+        }
         Contact contact = contactRepository.findByEmailAndOwnerId(email, user.getId()).orElseThrow(
                 () -> new ResourceNotFoundException("Contact with email " + email + " not found")
         );
@@ -158,8 +161,9 @@ public class ContactService {
         return toContactResponse(contact);
     }
 
-    public List<ContactResponse> getAllContacts(User user) {
-        return contactRepository.findByUser(user).stream()
+    // TODO: add separated offset/limit and cursor-based pagination
+    public List<ContactResponse> getAllContacts(User user, Pageable pageable) {
+        return contactRepository.findByUser(user, pageable).stream()
                 .map(this::toContactResponse).toList();
     }
 
@@ -208,6 +212,10 @@ public class ContactService {
             else {
                 contact.setPhone(request.phone());
             }
+        }
+
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
         }
 
         Contact savedContact;

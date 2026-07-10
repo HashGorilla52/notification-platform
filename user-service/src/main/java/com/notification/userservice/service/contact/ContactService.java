@@ -83,7 +83,7 @@ public class ContactService {
                     rowErrors.add("Invalid email address");
                 }
 
-                if (contactRepository.existsByEmailAndOwnerId(email, user.getId())) {
+                if (contactRepository.existsByEmailAndUserId(email, user.getId())) {
                     rowErrors.add("email already exists");
                 }
 
@@ -148,14 +148,14 @@ public class ContactService {
             errors.put("email", "Email is required");
             throw new ValidationException(errors);
         }
-        Contact contact = contactRepository.findByEmailAndOwnerId(email, user.getId()).orElseThrow(
+        Contact contact = contactRepository.findByEmailAndUserId(email, user.getId()).orElseThrow(
                 () -> new ResourceNotFoundException("Contact with email " + email + " not found")
         );
         return toContactResponse(contact);
     }
 
     public ContactResponse getContactById(UUID contactId, User user) {
-        Contact contact =  contactRepository.findByIdAndOwnerId(contactId, user.getId()).orElseThrow(
+        Contact contact =  contactRepository.findByIdAndUserId(contactId, user.getId()).orElseThrow(
                 () -> new ResourceNotFoundException("Contact with id " + contactId + " not found")
         );
         return toContactResponse(contact);
@@ -170,7 +170,7 @@ public class ContactService {
     public ContactResponse updateContact(User user, UUID contactId, UpdateContactRequest request) {
         Map<String, String> errors = new HashMap<>();
 
-        Contact contact = contactRepository.findByIdAndOwnerId(contactId, user.getId()).orElseThrow(
+        Contact contact = contactRepository.findByIdAndUserId(contactId, user.getId()).orElseThrow(
                 () -> new ResourceNotFoundException("Contact with id " + contactId + " not found")
         );
         if (request.name() != null) {
@@ -186,7 +186,7 @@ public class ContactService {
             if (request.email().isBlank() || request.email().length() > 254 || request.email().length() < 6) {
                 errors.put("email", "email must be between 6 and 254 characters");
             }
-            else if (contactRepository.existsByEmailAndOwnerId(request.email(), user.getId())) {
+            else if (contactRepository.existsByEmailAndUserId(request.email(), user.getId())) {
                 errors.put("email", "email already exists");
             }
             else {
@@ -229,7 +229,7 @@ public class ContactService {
     }
 
     public void deleteContact(User user, UUID contactId) {
-        Contact contact = contactRepository.findByIdAndOwnerId(contactId, user.getId())
+        Contact contact = contactRepository.findByIdAndUserId(contactId, user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Contact not found"));
         contactRepository.delete(contact);
     }

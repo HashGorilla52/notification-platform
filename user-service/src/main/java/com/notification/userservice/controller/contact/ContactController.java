@@ -46,7 +46,7 @@ public class ContactController {
         return contactService.getAllContacts(user, pageable);
     }
 
-    @GetMapping
+    @GetMapping("/search")
     @ResponseStatus(HttpStatus.OK)
     public ContactResponse getContactByEmail(@RequestParam String email) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

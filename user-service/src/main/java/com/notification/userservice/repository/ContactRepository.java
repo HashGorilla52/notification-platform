@@ -14,9 +14,9 @@ import java.util.UUID;
 public interface ContactRepository extends JpaRepository<Contact, UUID> {
     public List<Contact> findByUser(User user, Pageable pageable);
 
-    public boolean existsByEmailAndOwnerId(String email, UUID ownerId);
+    public boolean existsByEmailAndUserId(String email, UUID ownerId);
 
-    public Optional<Contact> findByEmailAndOwnerId(String email, UUID ownerId);
+    public Optional<Contact> findByEmailAndUserId(String email, UUID ownerId);
 
-    public Optional<Contact> findByIdAndOwnerId(UUID id, UUID ownerId);
+    public Optional<Contact> findByIdAndUserId(UUID id, UUID ownerId);
 }

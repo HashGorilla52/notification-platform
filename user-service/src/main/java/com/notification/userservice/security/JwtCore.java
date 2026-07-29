@@ -28,12 +28,12 @@ public class JwtCore {
     public static final String REFRESH = "refresh";
 
     public JwtCore(
-            @Value("${jwt.secret}")  String secret, @Value("${jwt.access-token-expiration}") long accessExpiration,
+            @Value("${jwt.secret}")  String key, @Value("${jwt.access-token-expiration}") long accessExpiration,
             @Value("${jwt.refresh-token-expiration}") long refreshExpiration,
             @Value("${jwt.issuer}") String issuer
             ) {
 
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.key = Keys.hmacShaKeyFor(key.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpiration = accessExpiration;
         this.refreshTokenExpiration = refreshExpiration;
         this.issuer = issuer;

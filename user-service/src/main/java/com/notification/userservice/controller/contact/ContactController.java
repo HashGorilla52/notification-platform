@@ -1,5 +1,7 @@
 package com.notification.userservice.controller.contact;
 
+import com.notification.userservice.annotation.ById;
+import com.notification.userservice.annotation.CurrentUser;
 import com.notification.userservice.dto.contact.ContactResponse;
 import com.notification.userservice.dto.contact.CreateContactRequest;
 import com.notification.userservice.dto.contact.UpdateContactRequest;
@@ -26,51 +28,42 @@ public class ContactController {
 
     @PostMapping("/upload-csv")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public UploadCsvResult uploadCsv(@RequestParam("file") MultipartFile file) {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public UploadCsvResult uploadCsv(@RequestParam("file") MultipartFile file, @CurrentUser User user) {
         return contactService.uploadCsv(file, user);
     }
 
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
-    public ContactResponse createContact(@RequestBody CreateContactRequest request) {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public ContactResponse createContact(@RequestBody CreateContactRequest request, @CurrentUser User user) {
         return contactService.CreateContact(user, request);
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<ContactResponse> getContacts(@PageableDefault(sort = "id", direction = Sort.Direction.ASC)
-                                                 Pageable pageable) {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                                                 Pageable pageable, @CurrentUser User user) {
         return contactService.getAllContacts(user, pageable);
     }
 
     @GetMapping("/search")
     @ResponseStatus(HttpStatus.OK)
-    public ContactResponse getContactByEmail(@RequestParam String email) {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public ContactResponse getContactByEmail(@RequestParam String email, @CurrentUser User user) {
         return contactService.getContactByEmail(email, user);
     }
 
-    @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ContactResponse getContactById(@PathVariable UUID id) {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    @ById()
+    public ContactResponse getContactById(@PathVariable UUID id, @CurrentUser User user) {
         return contactService.getContactById(id, user);
     }
 
-    @PatchMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ContactResponse updateContact(@PathVariable UUID id, @RequestBody UpdateContactRequest request) {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    @ById(method = RequestMethod.PATCH)
+    public ContactResponse updateContact(@PathVariable UUID id, @RequestBody UpdateContactRequest request,
+                                         @CurrentUser User user) {
         return contactService.updateContact(user, id, request);
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteContact(@PathVariable UUID id) {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    @ById(method = RequestMethod.DELETE, status=HttpStatus.NO_CONTENT)
+    public void deleteContact(@PathVariable UUID id, @CurrentUser User user) {
         contactService.deleteContact(user, id);
     }
 }

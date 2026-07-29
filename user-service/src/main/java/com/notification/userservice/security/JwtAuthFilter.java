@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,15 +12,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtCore jwtCore;
     private final UserDetailsServiceImpl userDetailsServiceImpl;
-
-    public JwtAuthFilter(JwtCore core,  UserDetailsServiceImpl userDetailsServiceImpl) {
-        this.jwtCore = core;
-        this.userDetailsServiceImpl = userDetailsServiceImpl;
-    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -34,7 +31,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (!token.isEmpty()) {
             if(jwtCore.isValid(token)) {
                 String type = jwtCore.getTypeFromToken(token);
-                if (!"/auth/refresh".equals(request.getServletPath()) && !"access".equals(type)) {
+                  if (!request.getServletPath().equals("/auth/refresh") && !type.equals("access")) {
                     response.sendError(401, "Access token required");
                     return;
                 }

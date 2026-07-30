@@ -8,12 +8,12 @@ import com.notification.userservice.dto.contact.UpdateContactRequest;
 import com.notification.userservice.dto.contact.UploadCsvResult;
 import com.notification.userservice.entity.User;
 import com.notification.userservice.service.contact.ContactService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,7 +34,7 @@ public class ContactController {
 
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
-    public ContactResponse createContact(@RequestBody CreateContactRequest request, @CurrentUser User user) {
+    public ContactResponse createContact(@Valid @RequestBody CreateContactRequest request, @CurrentUser User user) {
         return contactService.CreateContact(user, request);
     }
 

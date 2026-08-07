@@ -37,8 +37,11 @@ public class Contact {
     @Column(name = "telegram_id")
     private String telegramId;
 
-    @Column(name = "created_at", updatable = false)
-    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     @Setter(AccessLevel.NONE)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    @Setter(AccessLevel.NONE)
+    private LocalDateTime updatedAt;
 }

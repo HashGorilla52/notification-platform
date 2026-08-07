@@ -9,6 +9,7 @@ services:
       POSTGRES_DB: users_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: UTC
     ports:
       - "5432:5432"
 
@@ -19,6 +20,7 @@ services:
       POSTGRES_DB: templates_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: UTC
     ports:
       - "5433:5432"
 
@@ -29,6 +31,7 @@ services:
       POSTGRES_DB: dispatch_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: UTC
     ports:
       - "5434:5432"
 
@@ -39,6 +42,7 @@ services:
       POSTGRES_DB: delivery_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: UTC
     ports:
       - "5435:5432"
 
@@ -96,3 +100,16 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
     depends_on:
       - postgres-users
+
+  template-service:
+    build: ./template-service
+    container_name: template-service
+    ports:
+      - "8082:8082"
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-templates:5432/users_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      - postgres-templates

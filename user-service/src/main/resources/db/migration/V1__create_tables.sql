@@ -4,7 +4,7 @@ CREATE TABLE users (
                        password    VARCHAR(255) NOT NULL,
                        version     BIGINT NOT NULL DEFAULT 0,
                        full_name   VARCHAR(255),
-                       created_at  TIMESTAMP DEFAULT NOW()
+                       created_at  TIMESTAMP DEFAULT now()
 );
 
 CREATE TABLE contacts (
@@ -14,7 +14,7 @@ CREATE TABLE contacts (
                           email       VARCHAR(255),
                           phone       VARCHAR(50),
                           telegram_id VARCHAR(100),
-                          created_at  TIMESTAMP DEFAULT NOW()
+                          created_at  TIMESTAMP DEFAULT now()
 );
 
-CREATE UNIQUE INDEX idx_contacts_owner_email ON contacts(owner_id, email);
+CREATE UNIQUE INDEX contacts_owner_email_key ON contacts(owner_id, email);

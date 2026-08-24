@@ -21,7 +21,7 @@ CREATE TABLE contacts (
 
 CREATE TABLE channels (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    type VARCHAR(255) UNIQUE NOT NULL,
+    type VARCHAR(255) UNIQUE NOT NULL
 );
 
 CREATE TABLE contacts_channels (

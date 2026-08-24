@@ -11,4 +11,4 @@ public record RegisterRequest(@NotBlank
                               @Size(min = 8, max = 32)
                               String password,
                               @NotBlank
-                              String fullName) {}
+                              String username) {}

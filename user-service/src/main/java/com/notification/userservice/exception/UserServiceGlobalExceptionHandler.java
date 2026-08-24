@@ -89,7 +89,6 @@ public class UserServiceGlobalExceptionHandler {
     public ProblemDetail handleCsvValidation(CsvValidationException e) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
         problem.setTitle("CSV Validation Failed");
-        problem.setProperty("errors", e.getErrors());
         return problem;
     }
 

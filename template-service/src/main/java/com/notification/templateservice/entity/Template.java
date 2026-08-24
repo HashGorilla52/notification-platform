@@ -42,6 +42,4 @@ public class Template {
 
     @OneToMany(mappedBy = "template",cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TemplatePlaceholder> placeholders = new ArrayList<>();
-
-    public Template(String name, String )
 }

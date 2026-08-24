@@ -28,7 +28,7 @@ public class AuthService {
         User user = new User();
         user.setEmail(registerRequest.email());
         user.setPassword(passwordEncoder.encode(registerRequest.password()));
-        user.setUsername(registerRequest.fullName());
+        user.setUsername(registerRequest.username());
 
         User savedUser = userRepository.save(user);
         UUID id = savedUser.getId();
@@ -108,10 +108,10 @@ public class AuthService {
         return new AuthResponse(accessToken, refreshToken, email, user.getUsername());
     }
 
-    public void updateFullName(String email, UpdateFullNameRequest request) {
+    public void updateFullName(String email, UpdateUsernameRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        user.setUsername(request.fullName());
+        user.setUsername(request.username());
         userRepository.save(user);
     }
 }

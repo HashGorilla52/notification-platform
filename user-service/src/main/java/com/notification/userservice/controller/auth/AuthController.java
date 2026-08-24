@@ -38,7 +38,7 @@ public class AuthController {
 
     @PutMapping("/profile")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateFullName(@Valid @RequestBody UpdateFullNameRequest updateFullNameRequest) {
+    public void updateFullName(@Valid @RequestBody UpdateUsernameRequest updateFullNameRequest) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         authService.updateFullName(email, updateFullNameRequest);
     }

@@ -32,8 +32,8 @@ public class User implements UserDetails {
     @Column(name = "version", nullable = false)
     private long version;
 
-    @Column(name = "full_name")
-    private String fullName;
+    @Column(name = "username")
+    private String username;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @Setter(AccessLevel.NONE)

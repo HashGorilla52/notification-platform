@@ -1,4 +1,4 @@
-package com.notification.userservice.repository;
+package com.notification.userservice.repository.contact;
 
 import com.notification.userservice.entity.Contact;
 import com.notification.userservice.entity.User;

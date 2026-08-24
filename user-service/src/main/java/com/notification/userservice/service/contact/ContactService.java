@@ -4,7 +4,12 @@ import com.notification.userservice.dto.contact.*;
 import com.notification.userservice.entity.Contact;
 import com.notification.userservice.entity.User;
 import com.notification.userservice.exception.*;
-import com.notification.userservice.repository.ContactRepository;
+import com.notification.userservice.exception.csv.CsvProcessingException;
+import com.notification.userservice.exception.csv.CsvValidationException;
+import com.notification.userservice.fileparse.ContactCsvHeader;
+import com.notification.userservice.fileparse.CsvParserService;
+import com.notification.userservice.fileparse.ContactParseResult;
+import com.notification.userservice.repository.contact.ContactRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -14,7 +19,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -25,7 +29,8 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ContactService {
     private final ContactRepository contactRepository;
-
+    private final CsvParserService csvParserService;
+    
     /**
      * Parses a CSV file and creates contacts for the given user.
      * <p>
@@ -45,21 +50,36 @@ public class ContactService {
      * @param user the owner of the contacts
      * @return result containing the number of created contacts and validation errors
      * @throws CsvValidationException if no valid contacts were found
-     * @throws CsvProcessingException if the file cannot be read
+     * @throws CsvProcessingException if the file cannot be read or
      */
+
     public UploadCsvResult uploadCsv(MultipartFile file, User user) {
         CSVFormat csvFormat = CSVFormat.DEFAULT.builder()
                 .setHeader()
                 .setSkipHeaderRecord(true)
                 .get();
 
-        try (Reader reader = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)) {
-            CSVParser parser = csvFormat.parse(reader);
-            Set<String> requiredHeaders = Set.of("name" , "email");
-            Set<String> actualHeaders = parser.getHeaderMap().keySet();
-            if  (!actualHeaders.containsAll(requiredHeaders)) {
-                throw new IllegalArgumentException("Missing required header " + requiredHeaders);
+        ContactParseResult result = parseContactCsv(file, csvFormat, user);
+        List<Contact> contacts = result.contacts();
+        Map<Long, List<String>> errors = result.errors();
+
+        saveContacts(contacts);
+        // TODO: generate UUID in new DB table "contacts_csv_uploads"
+        return new UploadCsvResult(UUID.randomUUID(), ProcessingStatus.COMPLETED,
+                contacts.size(), errors.size(), errors);
+    }
+
+    private ContactParseResult parseContactCsv(MultipartFile file, CSVFormat csvFormat, User user) {
+        try (Reader reader = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8);
+             CSVParser parser = csvFormat.parse(reader)) {
+
+            if (parser.getRecordNumber() < 1) {
+                throw new CsvValidationException("There are no records in csv file");
             }
+
+            Set<String> requiredHeaders = ContactCsvHeader.getRequiredHeaders();
+            Set<String> actualHeaders = parser.getHeaderMap().keySet();
+            csvParserService.validateHeaders(requiredHeaders, actualHeaders);
 
             List<Contact> contacts = new ArrayList<>();
             Map<Long, List<String>> errors = new HashMap<>();
@@ -67,67 +87,72 @@ public class ContactService {
 
             for (CSVRecord record : parser)
             {
-                List<String> rowErrors = new ArrayList<>();
                 rowNumber++;
                 String name = record.get("name");
                 String email = record.get("email");
                 String phone = actualHeaders.contains("phone") ? record.get("phone") : null;
                 String telegramId = actualHeaders.contains("telegram_id") ? record.get("telegram_id") : null;
+                Contact contact = new Contact(name, email, phone, telegramId, user);
 
-                if (name == null || name.isBlank()) {
-                    rowErrors.add("name is required");
-                }
-
-                EmailValidator emailValidator = EmailValidator.getInstance();
-                if (email == null || !emailValidator.isValid(email)) {
-                    rowErrors.add("Invalid email address");
-                }
-
-                if (contactRepository.existsByEmailAndUserId(email, user.getId())) {
-                    rowErrors.add("email already exists");
-                }
-
-                // phone and telegram_id validation is coming later
+                List<String> rowErrors = validateContact(contact, user);
                 if (rowErrors.isEmpty()) {
-                    Contact contact = new Contact();
-                    contact.setName(name);
-                    contact.setEmail(email);
-                    contact.setPhone(phone);
-                    contact.setTelegramId(telegramId);
-                    contact.setUser(user);
                     contacts.add(contact);
                 }
                 else {
                     errors.put(rowNumber, rowErrors);
                 }
             }
-            if (contacts.isEmpty()) {
-                throw new CsvValidationException(errors, "There are no valid contacts in the file");
-            }
-
-            try {
-                contactRepository.saveAll(contacts);
-            }
-            catch (DataIntegrityViolationException e) {
-                throw new CsvProcessingException("Failed to save contacts due to data conflict", e);
-            }
-
-            // UUID will being generated in DB later
-            return new UploadCsvResult(UUID.randomUUID(), ProcessingStatus.COMPLETED, contacts.size(), errors.size(), errors);
+            return new ContactParseResult(contacts, errors);
         }
         catch (IOException e) {
             throw new CsvProcessingException("Failed to parse CSV file: ", e);
         }
     }
 
-    public ContactResponse CreateContact(User user, CreateContactRequest request) {
-        Contact contact = new Contact();
-        contact.setName(request.name());
-        contact.setEmail(request.email());
-        contact.setPhone(request.phone());
-        contact.setTelegramId(request.telegramId());
-        contact.setUser(user);
+    /**
+     * Check the {@code contact} for the presence of a name, uniqueness of the {@code contact}
+     * among another {@code user}'s ones
+     * and validate email address of this one.
+     * @param contact
+     * @param user
+     * @return List of errors.
+     */
+    private List<String> validateContact(Contact contact, User user) {
+        List<String> errors = new ArrayList<>();
+        String name = contact.getName();
+        String email = contact.getEmail();
 
+        if (name == null || name.isBlank()) {
+            errors.add("name is required");
+        }
+
+        EmailValidator emailValidator = EmailValidator.getInstance();
+        if (email == null || !emailValidator.isValid(email)) {
+            errors.add("invalid email address");
+        }
+
+        if (contactRepository.existsByEmailAndUserId(email, user.getId())) {
+            errors.add("current user's contact with this email address already exists");
+        }
+
+        return errors;
+    }
+
+    //TODO: must explain where the conflicts are
+    /**
+     * Save {@code contacts} to database. Throws {@link CsvProcessingException} if there are some data conflicts.
+     */
+    private void saveContacts(List<Contact> contacts) {
+        try {
+            contactRepository.saveAll(contacts);
+        }
+        catch (DataIntegrityViolationException e) {
+            throw new CsvProcessingException("Failed to save contacts due to data conflict", e);
+        }
+    }
+
+    public ContactResponse CreateContact(User user, CreateContactRequest request) {
+        Contact contact = new Contact(request.name(),  request.email(), request.phone(), request.telegramId(), user);
         Contact savedContact;
         try {
             savedContact = contactRepository.save(contact);

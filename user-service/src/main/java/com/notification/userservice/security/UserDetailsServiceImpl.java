@@ -1,6 +1,6 @@
 package com.notification.userservice.security;
 
-import com.notification.userservice.repository.UserRepository;
+import com.notification.userservice.repository.auth.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

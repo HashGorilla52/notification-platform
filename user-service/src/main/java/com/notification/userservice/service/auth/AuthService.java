@@ -4,7 +4,7 @@ import com.notification.userservice.dto.auth.*;
 import com.notification.userservice.entity.User;
 import com.notification.userservice.exception.ResourceAlreadyExistsException;
 import com.notification.userservice.exception.UserNotFoundException;
-import com.notification.userservice.repository.UserRepository;
+import com.notification.userservice.repository.auth.UserRepository;
 import com.notification.userservice.security.JwtCore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -28,12 +28,12 @@ public class AuthService {
         User user = new User();
         user.setEmail(registerRequest.email());
         user.setPassword(passwordEncoder.encode(registerRequest.password()));
-        user.setFullName(registerRequest.fullName());
+        user.setUsername(registerRequest.fullName());
 
         User savedUser = userRepository.save(user);
         UUID id = savedUser.getId();
         String email = savedUser.getEmail();
-        String fullName = savedUser.getFullName();
+        String fullName = savedUser.getUsername();
         long version = savedUser.getVersion();
 
         String accessToken = jwtCore.generateAccessToken(id, email);
@@ -53,7 +53,7 @@ public class AuthService {
 
         UUID userId = user.getId();
         String email = user.getEmail();
-        String fullName = user.getFullName();
+        String fullName = user.getUsername();
         long version = user.getVersion();
 
         String accessToken = jwtCore.generateAccessToken(userId, email);
@@ -86,7 +86,7 @@ public class AuthService {
         String newRefreshToken = jwtCore.generateRefreshToken(user.getId(), email, trueVersion);
         String newAccessToken = jwtCore.generateAccessToken(user.getId(), email);
 
-        return new AuthResponse(newAccessToken, newRefreshToken, email, user.getFullName());
+        return new AuthResponse(newAccessToken, newRefreshToken, email, user.getUsername());
     }
 
     public AuthResponse changePassword(String email, ChangePasswordRequest request) {
@@ -105,13 +105,13 @@ public class AuthService {
         userRepository.save(user);
         String accessToken = jwtCore.generateAccessToken(user.getId(), email);
         String refreshToken = jwtCore.generateRefreshToken(user.getId(), email, newVersion);
-        return new AuthResponse(accessToken, refreshToken, email, user.getFullName());
+        return new AuthResponse(accessToken, refreshToken, email, user.getUsername());
     }
 
     public void updateFullName(String email, UpdateFullNameRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        user.setFullName(request.fullName());
+        user.setUsername(request.fullName());
         userRepository.save(user);
     }
 }

@@ -11,12 +11,13 @@ CREATE TABLE templates (
 CREATE UNIQUE INDEX templates_owner_id_name_key ON templates(name, owner_id);
 
 CREATE OR REPLACE FUNCTION set_updated_at()
-       RETURNS TRIGGER AS $$
-       BEGIN
-            NEW.updated_at := now();
-            RETURN NEW;
-       END;
-       $$ LANGUAGE plpgsql;
+RETURNS TRIGGER AS $$
+    BEGIN
+    NEW.updated_at := now();
+    RETURN NEW;
+    END;
+    $$
+LANGUAGE plpgsql;
 
 CREATE TRIGGER before_update_templates
 BEFORE UPDATE ON templates

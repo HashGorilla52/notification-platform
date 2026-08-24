@@ -1,4 +1,4 @@
-package com.notification.userservice.repository;
+package com.notification.userservice.repository.auth;
 
 import com.notification.userservice.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

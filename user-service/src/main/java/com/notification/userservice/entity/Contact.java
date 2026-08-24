@@ -44,4 +44,12 @@ public class Contact {
     @Column(name = "updated_at")
     @Setter(AccessLevel.NONE)
     private LocalDateTime updatedAt;
+
+    public Contact(String name, String email, String phone, String telegramId, User user) {
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.telegramId = telegramId;
+        this.user = user;
+    }
 }

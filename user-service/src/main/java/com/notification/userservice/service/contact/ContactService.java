@@ -126,8 +126,7 @@ public class ContactService {
             errors.add("name is required");
         }
 
-        EmailValidator emailValidator = EmailValidator.getInstance();
-        if (email == null || !emailValidator.isValid(email)) {
+        if (email == null || !CsvParserService.getEmailValidator().isValid(email)) {
             errors.add("invalid email address");
         }
 

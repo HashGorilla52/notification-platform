@@ -57,6 +57,7 @@ RETURNS TRIGGER AS $$
 
     IF address_twins > 0 THEN
        RAISE EXCEPTION 'contacts of owner with id % must be with unique channel addresses', owner;
+    END IF;
     END;
 $$
 LANGUAGE plpgsql;

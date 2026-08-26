@@ -1,6 +1,8 @@
 package com.notification.userservice.fileparse;
 
 import com.notification.userservice.exception.csv.CsvHeadersException;
+import lombok.Getter;
+import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
@@ -8,6 +10,12 @@ import java.util.stream.Collectors;
 
 @Component
 public class CsvParserService {
+    @Getter
+    private static final EmailValidator EMAIL_VALIDATOR = EmailValidator.getInstance();
+
+    public static EmailValidator getEmailValidator() {
+        return EMAIL_VALIDATOR;
+    }
 
     /**
      * Validate CSV headers. If {@code actualHeaders} contain all {@code requiredHeaders}, the method

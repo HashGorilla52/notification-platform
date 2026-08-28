@@ -142,12 +142,7 @@ public class ContactService {
      * Save {@code contacts} to database. Throws {@link CsvProcessingException} if there are some data conflicts.
      */
     private void saveContacts(List<Contact> contacts) {
-        try {
             contactRepository.saveAll(contacts);
-        }
-        catch (DataIntegrityViolationException e) {
-            throw new CsvProcessingException("Failed to save contacts due to data conflict", e);
-        }
     }
 
     public ContactResponse CreateContact(User user, CreateContactRequest request) {

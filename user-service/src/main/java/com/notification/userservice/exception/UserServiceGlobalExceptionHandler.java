@@ -1,8 +1,11 @@
 package com.notification.userservice.exception;
 
+import com.notification.userservice.error.DataIntegrityErrorMapper;
 import com.notification.userservice.exception.csv.CsvHeadersException;
 import com.notification.userservice.exception.csv.CsvProcessingException;
 import com.notification.userservice.exception.csv.CsvValidationException;
+import org.postgresql.util.PSQLException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -17,6 +20,9 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class UserServiceGlobalExceptionHandler {
+
+    private static final DataIntegrityErrorMapper DATA_INTEGRITY_ERROR_MAPPER = new DataIntegrityErrorMapper();
+
     @ExceptionHandler(UserNotFoundException.class)
     public ProblemDetail handleNotFound(UserNotFoundException e) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
@@ -105,6 +111,20 @@ public class UserServiceGlobalExceptionHandler {
         pd.setTitle("CSV Headers Missed");
         pd.setProperty("actualHeaders", e.getActualHeaders());
         pd.setProperty("missingHeaders", e.getMissingHeaders());
+        return pd;
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException e) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+
+        Throwable specificCause = e.getMostSpecificCause();
+        String detail = specificCause instanceof PSQLException ?
+                DATA_INTEGRITY_ERROR_MAPPER.getMessageBySqlStateCode(((PSQLException) specificCause).getSQLState()) :
+                DATA_INTEGRITY_ERROR_MAPPER.getDefaultMessage();
+
+        pd.setDetail(detail);
+        pd.setTitle("Data Integrity Violation");
         return pd;
     }
 

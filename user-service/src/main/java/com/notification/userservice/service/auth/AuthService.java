@@ -33,13 +33,13 @@ public class AuthService {
         User savedUser = userRepository.save(user);
         UUID id = savedUser.getId();
         String email = savedUser.getEmail();
-        String fullName = savedUser.getUsername();
+        String username = savedUser.getUsername();
         long version = savedUser.getVersion();
 
         String accessToken = jwtCore.generateAccessToken(id, email);
         String refreshToken = jwtCore.generateRefreshToken(id, email, version);
 
-        return new AuthResponse(accessToken, refreshToken, email, fullName);
+        return new AuthResponse(accessToken, refreshToken, email, username);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -53,13 +53,13 @@ public class AuthService {
 
         UUID userId = user.getId();
         String email = user.getEmail();
-        String fullName = user.getUsername();
+        String username = user.getUsername();
         long version = user.getVersion();
 
         String accessToken = jwtCore.generateAccessToken(userId, email);
         String refreshToken = jwtCore.generateRefreshToken(userId, email, version);
 
-        return new AuthResponse(accessToken, refreshToken, email, fullName);
+        return new AuthResponse(accessToken, refreshToken, email, username);
     }
 
     public AuthResponse refresh(String refreshToken) {
@@ -108,7 +108,7 @@ public class AuthService {
         return new AuthResponse(accessToken, refreshToken, email, user.getUsername());
     }
 
-    public void updateFullName(String email, UpdateUsernameRequest request) {
+    public void updateUsername(String email, UpdateUsernameRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         user.setUsername(request.username());

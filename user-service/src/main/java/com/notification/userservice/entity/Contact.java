@@ -52,4 +52,11 @@ public class Contact {
         this.telegramId = telegramId;
         this.user = user;
     }
+
+    public Contact(String name, String email, String phone, String telegramId) {
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.telegramId = telegramId;
+    }
 }

@@ -9,6 +9,7 @@ import com.notification.userservice.exception.csv.CsvValidationException;
 import com.notification.userservice.fileparse.ContactCsvHeader;
 import com.notification.userservice.fileparse.CsvParserService;
 import com.notification.userservice.fileparse.ContactParseResult;
+import com.notification.userservice.repository.auth.UserRepository;
 import com.notification.userservice.repository.contact.ContactRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
@@ -30,6 +31,7 @@ import java.util.*;
 public class ContactService {
     private final ContactRepository contactRepository;
     private final CsvParserService csvParserService;
+    private final UserRepository userRepository;
     
     /**
      * Parses a CSV file and creates contacts for the given user.
@@ -52,7 +54,6 @@ public class ContactService {
      * @throws CsvValidationException if no valid contacts were found
      * @throws CsvProcessingException if the file cannot be read or
      */
-
     public UploadCsvResult uploadCsv(MultipartFile file, User user) {
         CSVFormat csvFormat = CSVFormat.DEFAULT.builder()
                 .setHeader()
@@ -115,7 +116,7 @@ public class ContactService {
      * and validate email address of this one.
      * @param contact
      * @param user
-     * @return List of errors.
+     * @return list of errors.
      */
     private List<String> validateContact(Contact contact, User user) {
         List<String> errors = new ArrayList<>();
@@ -137,7 +138,11 @@ public class ContactService {
         return errors;
     }
 
-    //TODO: must explain where the conflicts are
+    private void linkWithUser(Contact contact, User user) {
+        User userRef = userRepository.getReferenceById(user.getId());
+        contact.setUser(userRef);
+    }
+    
     /**
      * Save {@code contacts} to database. Throws {@link CsvProcessingException} if there are some data conflicts.
      */
@@ -146,17 +151,18 @@ public class ContactService {
     }
 
     public ContactResponse CreateContact(User user, CreateContactRequest request) {
-        Contact contact = new Contact(request.name(),  request.email(), request.phone(), request.telegramId(), user);
+        Contact contact = new Contact(request.name(),  request.email(), request.phone(), request.telegramId());
+        linkWithUser(contact, user);
         Contact savedContact;
-        try {
-            savedContact = contactRepository.save(contact);
-        }
-        catch (DataIntegrityViolationException e) {
-            throw new ResourceAlreadyExistsException("Contact already exists");
-        }
+        savedContact = contactRepository.save(contact);
         return toContactResponse(savedContact);
     }
 
+    /**
+     * Mapping method for getting {@link ContactResponse} object from {@link Contact} object.
+     * @param contact {@link Contact} object that should be mapped.
+     * @return {@link ContactResponse} object.
+     */
     private ContactResponse toContactResponse(Contact contact) {
         return new ContactResponse(contact.getId(),contact.getUser().getId(),
                 contact.getName(), contact.getEmail(), contact.getPhone(), contact.getTelegramId());
@@ -186,6 +192,14 @@ public class ContactService {
         return contactRepository.findByUser(user, pageable).stream()
                 .map(this::toContactResponse).toList();
     }
+
+//    public List<ContactResponse> getContactsPage(User user, Pageable pageable) {
+//
+//    }
+//
+//    public ContactsCursorPage getContactsWithCursor() {
+//
+//    }
 
     public ContactResponse updateContact(User user, UUID contactId, UpdateContactRequest request) {
         Map<String, String> errors = new HashMap<>();

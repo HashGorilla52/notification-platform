@@ -12,5 +12,4 @@ public record CreateContactRequest(@NotBlank
                                    String email,
                                    String phone,
                                    String telegramId
-                                   ) {
-}
+                                   ) {}

@@ -1,5 +1,6 @@
 package com.notification.userservice.security;
 
+import com.notification.userservice.entity.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,6 +38,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
                 String email = jwtCore.getEmailFromToken(token);
                 UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(email);
+                System.out.println("\nJwtAuthFilter - Loaded user id: " + ((User)userDetails).getId() + "\n");
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authToken);

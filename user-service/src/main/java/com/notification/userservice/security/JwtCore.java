@@ -1,10 +1,10 @@
 package com.notification.userservice.security;
 
+import com.notification.userservice.exception.InvalidTokenException;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import io.jsonwebtoken.*;
-
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -54,30 +54,31 @@ public class JwtCore {
         return buildToken(email, claims, refreshTokenExpiration);
     }
 
-    public String getEmailFromToken(String token) {
-        return parseToken(token).getPayload().getSubject();
-    }
-
-    public UUID getUserIdFromToken(String token) {
-        return parseToken(token).getPayload().get("userId", UUID.class);
-    }
-
-    public Long getVersionFromToken(String token) {
-        return parseToken(token).getPayload().get("version", Long.class);
-    }
-
-    public String getTypeFromToken(String token) {
-        return parseToken(token).getPayload().get("type", String.class);
-    }
-
-    public boolean isValid(String token) {
-        try {
-            parseToken(token);
-            return true;
+    public ParsedRefreshToken parseRefreshToken(String token) {
+        Claims claims = parseToken(token).getPayload();
+        if (!REFRESH.equals(claims.get("type"))){
+            throw new InvalidTokenException("Invalid token");
         }
-        catch (JwtException | IllegalArgumentException e) {
-            return false;
+        return new ParsedRefreshToken(
+                UUID.fromString(claims.get("userId", String.class)),
+                claims.getSubject(),
+                claims.get("type", String.class),
+                claims.get("version", Long.class),
+                claims.getExpiration()
+        );
+    }
+
+    public ParsedAccessToken parseAccessToken(String token) {
+        Claims claims = parseToken(token).getPayload();
+        if (!ACCESS.equals(claims.get("type"))){
+            throw new InvalidTokenException("Invalid token");
         }
+        return new ParsedAccessToken(
+                UUID.fromString(claims.get("userId", String.class)),
+                claims.getSubject(),
+                claims.get("type", String.class),
+                claims.getExpiration()
+        );
     }
 
     private Jws<Claims> parseToken(String token) {
@@ -93,7 +94,6 @@ public class JwtCore {
                 .issuer(issuer)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusMillis(expiration)));
-
         claims.forEach(builder::claim);
         return builder.signWith(key).compact();
     }

@@ -1,6 +1,7 @@
 package com.notification.userservice.security;
 
-import com.notification.userservice.entity.User;
+import com.notification.userservice.exception.InvalidTokenException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,22 +29,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring("Bearer ".length());
         }
-
         if (!token.isEmpty()) {
-            if(jwtCore.isValid(token)) {
-                String type = jwtCore.getTypeFromToken(token);
-                  if (!request.getServletPath().equals("/auth/refresh") && !type.equals("access")) {
-                    response.sendError(401, "Access token required");
-                    return;
-                }
-                String email = jwtCore.getEmailFromToken(token);
+            if (request.getServletPath().equals("/auth/refresh")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            try {
+                ParsedAccessToken parsedAccessToken = jwtCore.parseAccessToken(token);
+                String email = parsedAccessToken.sub();
                 UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(email);
-                System.out.println("\nJwtAuthFilter - Loaded user id: " + ((User)userDetails).getId() + "\n");
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
-            else {
+            catch (InvalidTokenException | JwtException e) {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
                 return;
             }

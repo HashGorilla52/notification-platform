@@ -1,11 +1,11 @@
 package com.notification.userservice.controller.auth;
 
+import com.notification.userservice.annotation.CurrentUser;
 import com.notification.userservice.dto.auth.*;
 import com.notification.userservice.service.auth.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -31,22 +31,21 @@ public class AuthController {
     }
 
     @PostMapping("/change-password")
-    public AuthResponse changePassword(@Valid @RequestBody ChangePasswordRequest changePasswordRequest) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+    public AuthResponse changePassword(@Valid @RequestBody ChangePasswordRequest changePasswordRequest,
+                                       @CurrentUser String email) {
         return authService.changePassword(email, changePasswordRequest);
     }
 
     @PutMapping("/profile")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateUsername(@Valid @RequestBody UpdateUsernameRequest updateFullNameRequest) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        authService.updateUsername(email, updateFullNameRequest);
+    public void updateUsername(@Valid @RequestBody UpdateUsernameRequest updateUsernameRequest,
+                               @CurrentUser String email) {
+        authService.updateUsername(email, updateUsernameRequest);
     }
 
     @GetMapping("/validate")
     @ResponseStatus(HttpStatus.OK)
     public void validate() {
-
     }
 
 }

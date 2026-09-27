@@ -2,15 +2,17 @@ package com.notification.userservice.service.auth;
 
 import com.notification.userservice.dto.auth.*;
 import com.notification.userservice.entity.User;
+import com.notification.userservice.exception.InvalidTokenException;
 import com.notification.userservice.exception.ResourceAlreadyExistsException;
 import com.notification.userservice.exception.UserNotFoundException;
 import com.notification.userservice.repository.auth.UserRepository;
 import com.notification.userservice.security.JwtCore;
+import com.notification.userservice.security.ParsedRefreshToken;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.UUID;
 
 @Service
@@ -24,21 +26,17 @@ public class AuthService {
         if (userRepository.existsByEmail(registerRequest.email())) {
             throw new ResourceAlreadyExistsException("User with email " + registerRequest.email() + " already exists");
         }
-
         User user = new User();
         user.setEmail(registerRequest.email());
         user.setPassword(passwordEncoder.encode(registerRequest.password()));
         user.setUsername(registerRequest.username());
-
         User savedUser = userRepository.save(user);
         UUID id = savedUser.getId();
         String email = savedUser.getEmail();
         String username = savedUser.getUsername();
         long version = savedUser.getVersion();
-
         String accessToken = jwtCore.generateAccessToken(id, email);
         String refreshToken = jwtCore.generateRefreshToken(id, email, version);
-
         return new AuthResponse(accessToken, refreshToken, email, username);
     }
 
@@ -46,47 +44,32 @@ public class AuthService {
         String requestEmail = request.email();
         User user = userRepository.findByEmail(requestEmail).orElseThrow(
                 () -> new UserNotFoundException("User with email " + requestEmail + " not found"));;
-
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new BadCredentialsException("Incorrect password");
         }
-
         UUID userId = user.getId();
         String email = user.getEmail();
         String username = user.getUsername();
         long version = user.getVersion();
-
         String accessToken = jwtCore.generateAccessToken(userId, email);
         String refreshToken = jwtCore.generateRefreshToken(userId, email, version);
-
         return new AuthResponse(accessToken, refreshToken, email, username);
     }
 
     public AuthResponse refresh(String refreshToken) {
-        if (!jwtCore.isValid(refreshToken)) {
-            throw new BadCredentialsException("Invalid or expired refresh token");
+        try {
+            ParsedRefreshToken parsedToken = jwtCore.parseRefreshToken(refreshToken);
+            String email = parsedToken.sub();
+            User user = userRepository.findByEmail(email).orElseThrow(
+                    () -> new UserNotFoundException("User with email " + email + " not found"));
+            validateRefreshToken(parsedToken, user);
+            String newRefreshToken = jwtCore.generateRefreshToken(user.getId(), email, parsedToken.version());
+            String newAccessToken = jwtCore.generateAccessToken(user.getId(), email);
+            return new AuthResponse(newAccessToken, newRefreshToken, email, user.getUsername());
         }
-
-        String type = jwtCore.getTypeFromToken(refreshToken);
-        if (!type.equals(JwtCore.REFRESH)) {
-            throw new BadCredentialsException("Token is not a refresh token");
+        catch (JwtException e) {
+            throw new InvalidTokenException("Invalid or expired token");
         }
-
-        String email = jwtCore.getEmailFromToken(refreshToken);
-        long requestVersion = jwtCore.getVersionFromToken(refreshToken);
-        User user = userRepository.findByEmail(email).orElseThrow(
-                () -> new UserNotFoundException("User with email " + email + " not found")
-        );
-
-        long trueVersion = user.getVersion();
-        if (requestVersion != trueVersion) {
-            throw new BadCredentialsException("Token has been revoked");
-        }
-
-        String newRefreshToken = jwtCore.generateRefreshToken(user.getId(), email, trueVersion);
-        String newAccessToken = jwtCore.generateAccessToken(user.getId(), email);
-
-        return new AuthResponse(newAccessToken, newRefreshToken, email, user.getUsername());
     }
 
     public AuthResponse changePassword(String email, ChangePasswordRequest request) {
@@ -103,6 +86,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         user.setVersion(newVersion);
         userRepository.save(user);
+
         String accessToken = jwtCore.generateAccessToken(user.getId(), email);
         String refreshToken = jwtCore.generateRefreshToken(user.getId(), email, newVersion);
         return new AuthResponse(accessToken, refreshToken, email, user.getUsername());
@@ -113,5 +97,13 @@ public class AuthService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         user.setUsername(request.username());
         userRepository.save(user);
+    }
+
+    private void validateRefreshToken(ParsedRefreshToken parsedToken, User user) {
+        if (!JwtCore.REFRESH.equals(parsedToken.type()) ||
+                !user.getId().equals(parsedToken.userId()) ||
+                !parsedToken.version().equals(user.getVersion())) {
+            throw new InvalidTokenException("Invalid or expired refresh token");
+        }
     }
 }
